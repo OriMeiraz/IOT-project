@@ -80,7 +80,6 @@ public class LoadCSV extends AppCompatActivity {
 
     private void ClickBack(){
         finish();
-
     }
 
     private ArrayList<String[]> CsvRead(String path){
