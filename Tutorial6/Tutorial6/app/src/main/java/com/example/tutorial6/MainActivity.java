@@ -19,17 +19,19 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportFragmentManager().addOnBackStackChangedListener(this);
+
+        //getSupportFragmentManager().addOnBackStackChangedListener(this);
         if(ContextCompat.checkSelfPermission(MainActivity.this,Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ){
             ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},0);
         }
 
-            if (savedInstanceState == null)
+        if (savedInstanceState == null)
             getSupportFragmentManager().beginTransaction().add(R.id.fragment, new DevicesFragment(), "devices").commit();
         else
             onBackStackChanged();
 
-        }
+     }
+
 
     @Override
     public void onBackStackChanged() {

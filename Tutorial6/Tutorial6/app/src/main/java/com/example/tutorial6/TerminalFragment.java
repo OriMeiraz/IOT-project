@@ -250,7 +250,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         buttonReset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                play(v);
+                //play(v);
+                MediaPlayer.create(getContext(), R.raw.drum).start();
                 TimeArray = new ArrayList<>();
                 xArray = new ArrayList<>();
                 yArray = new ArrayList<>();
