@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.Editable;
@@ -30,6 +31,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -67,10 +69,9 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private String newline = TextUtil.newline_crlf;
 
     LineChart mpLineChart;
-    LineDataSet xDataSet;
-    LineDataSet yDataSet;
+    LineDataSet hDataSet;
     LineDataSet zDataSet;
-    int time = 0;
+    float time = 0;
     ArrayList<ILineDataSet> dataSets = new ArrayList<>();
     LineData data;
     Button buttonClear;
@@ -79,8 +80,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     Button buttonStartStop;
     Button buttonReset;
     CheckBox isRunning;
-    ArrayList<String> xArray = new ArrayList<>();
-    ArrayList<String> yArray = new ArrayList<>();
+    ArrayList<String> hArray = new ArrayList<>();
     ArrayList<String> zArray = new ArrayList<>();
     ArrayList<String> TimeArray = new ArrayList<>();
     EditText filename;
@@ -88,10 +88,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     MediaPlayer player;
 
     public void play(View v){
-        if (player == null){
-            player = MediaPlayer.create(getContext(), R.raw.drum);
-        }
-        player.start();
+        MediaPlayer.create(getContext(), R.raw.drum).start();
     }
 //    public void stop(View v){
 //        if (player != null){
@@ -203,21 +200,17 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         buttonReset = (Button) view.findViewById(R.id.reset_btn);
 
         mpLineChart = (LineChart) view.findViewById(R.id.line_chart);
-        xDataSet =  new LineDataSet(emptyDataValues(), "x");
-        xDataSet.setColor(ColorTemplate.rgb("ff0000"));
-        xDataSet.setCircleColor((ColorTemplate.rgb("ff0000")));
 
-        yDataSet =  new LineDataSet(emptyDataValues(), "y");
-        yDataSet.setColor(ColorTemplate.rgb("00ff00"));
-        yDataSet.setCircleColor(ColorTemplate.rgb("00ff00"));
+        hDataSet =  new LineDataSet(emptyDataValues(), "height");
+        hDataSet.setColor(ColorTemplate.rgb("00ff00"));
+        hDataSet.setCircleColor(ColorTemplate.rgb("00ff00"));
 
-        zDataSet =  new LineDataSet(emptyDataValues(), "z");
+        zDataSet =  new LineDataSet(emptyDataValues(), "z_accel");
         zDataSet.setColor(ColorTemplate.rgb("0000ff"));
         zDataSet.setCircleColor(ColorTemplate.rgb("0000ff"));
 
 
-        dataSets.add(xDataSet);
-        dataSets.add(yDataSet);
+        dataSets.add(hDataSet);
         dataSets.add(zDataSet);
         data = new LineData(dataSets);
         mpLineChart.setData(data);
@@ -253,13 +246,13 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 //play(v);
                 MediaPlayer.create(getContext(), R.raw.drum).start();
                 TimeArray = new ArrayList<>();
-                xArray = new ArrayList<>();
-                yArray = new ArrayList<>();
+                hArray = new ArrayList<>();
                 zArray = new ArrayList<>();
             }
         });
 
         buttonSave.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View v) {
                 try {
@@ -282,15 +275,14 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     csvWriter.writeNext(new String[]{"Time [sec]", "ACC X", "ACC Y", "ACC Z"});
 
                     float t0 = Float.parseFloat(TimeArray.get(0));
-                    int n = xArray.size();
+                    int n = zArray.size();
                     for (int i = 0; i < n; i++) {
                         float t = Float.parseFloat(TimeArray.get(i));
-                        row = new String[]{String.valueOf(t-t0), xArray.get(i), yArray.get(i), zArray.get(i)};
+                        row = new String[]{String.valueOf(t-t0), TimeArray.get(i), zArray.get(i), hArray.get(i)};
                         csvWriter.writeNext(row);
                     }
                     csvWriter.close();
-                    xArray = new ArrayList<>();
-                    yArray = new ArrayList<>();
+                    hArray = new ArrayList<>();
                     zArray = new ArrayList<>();
                     TimeArray = new ArrayList<>();
                     Toast.makeText(getActivity(), "Saved", Toast.LENGTH_LONG).show();
@@ -416,33 +408,47 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             receiveText.append(TextUtil.toHexString(message) + '\n');
         } else {
             String msg = new String(message);
+            String[] msg_arr;
+            float h, z, t;
             if(newline.equals(TextUtil.newline_crlf) && msg.length() > 0) {
                 // don't show CR as ^M if directly before LF
                 String msg_to_save = msg;
                 msg_to_save = msg.replace(TextUtil.newline_crlf, TextUtil.emptyString);
                 // check message length
                 if (msg_to_save.length() > 1){
-                // split message string by ',' char
-                float distance = Float.valueOf(msg_to_save.substring(9));
-                // function to trim blank spaces
+                    // split message string by ',' char
+                    //float distance = Float.valueOf(msg_to_save.substring(9));
+                    msg_arr = msg_to_save.split(", ");
+                    t = Float.parseFloat(msg_arr[0]);
+                    z = Float.parseFloat(msg_arr[1]);
+                    h = Float.parseFloat(msg_arr[2]);
 
-                // saving data to csv
-                if (buttonStartStop.getText().equals("STOP"))
-                {
-                    xArray.add(String.valueOf(distance));
-                }
+                    // function to trim blank spaces
 
-                // add received values to line dataset for plotting the linechart
-                data.addEntry(new Entry(time, distance),0);
-                time++;
-                //data.addEntry(new Entry(Float.parseFloat(parts[3]),Float.parseFloat(parts[1])),1);
-                //data.addEntry(new Entry(Float.parseFloat(parts[3]),Float.parseFloat(parts[2])),2);
+                    // saving data to csv
+                    if (buttonStartStop.getText().equals("STOP"))
+                    {
+                        TimeArray.add(String.valueOf(t));
+                        zArray.add(String.valueOf(z));
+                        hArray.add(String.valueOf(h));
+                    }
 
-                xDataSet.notifyDataSetChanged(); // let the data know a dataSet changed
-                //yDataSet.notifyDataSetChanged(); // let the data know a dataSet changed
-                //zDataSet.notifyDataSetChanged(); // let the data know a dataSet changed
-                mpLineChart.notifyDataSetChanged(); // let the chart know it's data changed
-                mpLineChart.invalidate(); // refresh
+                    // add received values to line dataset for plotting the linechart
+                    if (z<-2){
+                        play(getView());
+                        time = t;
+                    }
+
+                    data.addEntry(new Entry(t, h),0);
+                    data.addEntry(new Entry(t, z),1);
+                    //data.addEntry(new Entry(Float.parseFloat(parts[3]),Float.parseFloat(parts[1])),1);
+                    //data.addEntry(new Entry(Float.parseFloat(parts[3]),Float.parseFloat(parts[2])),2);
+
+                    zDataSet.notifyDataSetChanged(); // let the data know a dataSet chang
+                    hDataSet.notifyDataSetChanged(); // let the data know a dataSet changed
+                    //zDataSet.notifyDataSetChanged(); // let the data know a dataSet changed
+                    mpLineChart.notifyDataSetChanged(); // let the chart know it's data changed
+                    mpLineChart.invalidate(); // refresh
 
             }
 
