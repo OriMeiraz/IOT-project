@@ -34,6 +34,9 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
+import com.chaquo.python.PyObject;
+import com.chaquo.python.Python;
+import com.chaquo.python.android.AndroidPlatform;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
@@ -85,6 +88,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     EditText filename;
     EditText NumSteps;
     MediaPlayer player;
+    PyObject pyobj;
 
     public void play_drum1(View v){
         MediaPlayer.create(getContext(), R.raw.drum1).start();
@@ -215,7 +219,12 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         data = new LineData(dataSets);
         mpLineChart.setData(data);
         mpLineChart.invalidate();
+        if (! Python.isStarted()) {
+            Python.start(new AndroidPlatform(getActivity()));
+        }
 
+        Python py =  Python.getInstance();
+        pyobj = py.getModule("test");
 
 
         buttonClear.setOnClickListener(new View.OnClickListener() {
@@ -444,6 +453,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
                         time = t;
                     }
+
 
                     data.addEntry(new Entry(t, h),0);
                     data.addEntry(new Entry(t, z),1);
