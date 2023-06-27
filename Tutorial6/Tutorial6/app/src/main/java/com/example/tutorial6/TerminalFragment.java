@@ -43,7 +43,6 @@ import com.opencsv.CSVWriter;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 //import java.time.LocalTime;
 import java.time.LocalDateTime;
@@ -87,16 +86,17 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     EditText NumSteps;
     MediaPlayer player;
 
-    public void play(View v){
-        MediaPlayer.create(getContext(), R.raw.drum).start();
+    public void play_drum1(View v){
+        MediaPlayer.create(getContext(), R.raw.drum1).start();
     }
-//    public void stop(View v){
-//        if (player != null){
-//            player.release();
-//            player = null;
-//            Toast.makeText(service, "Done Playing", Toast.LENGTH_SHORT).show();
-//        }
-//    }
+    public void play_drum2(View v){
+        MediaPlayer.create(getContext(), R.raw.drum2).start();
+    }
+    public void play_drum3(View v){
+        MediaPlayer.create(getContext(), R.raw.drum3).start();
+    }
+
+
     /*
      * Lifecycle
      */
@@ -244,7 +244,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             @Override
             public void onClick(View v) {
                 //play(v);
-                MediaPlayer.create(getContext(), R.raw.drum).start();
+                MediaPlayer.create(getContext(), R.raw.drum1).start();
                 TimeArray = new ArrayList<>();
                 hArray = new ArrayList<>();
                 zArray = new ArrayList<>();
@@ -434,8 +434,14 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     }
 
                     // add received values to line dataset for plotting the linechart
-                    if (z<-2){
-                        play(getView());
+                    if (z<0){
+                        if (h<20)
+                            play_drum3(getView());
+                        else if (h<40)
+                            play_drum2(getView());
+                        else if (h<60)
+                            play_drum1(getView());
+
                         time = t;
                     }
 
