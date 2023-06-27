@@ -46,15 +46,7 @@ public class LoadCSV extends AppCompatActivity {
 
     }
     public synchronized void playFile(ArrayList<String[]> csvData){
-//        for(int i=0; i<csvData.size(); i++){
-//            int i_ = i;
-//            Handler handler = new Handler().postDelayed(new Runnable() {
-//                public void run() {
-//                    String sound = csvData.get(i_)[0];
-//                    int x = 8;
-//                }
-//            }, 0.05 ); // 20Hz
-//        }
+        boolean arrived_first_drum = false;
         for(int i = 0; i < csvData.size(); i++) {
             String sound = csvData.get(i)[0];
             if (sound.equals("1"))
@@ -63,10 +55,13 @@ public class LoadCSV extends AppCompatActivity {
                 play_drum2();
             if (sound.equals("3"))
                 play_drum3();
-            try {
-                wait(50); // 20Hz
-            }
-            catch (Exception e) {
+            if (!sound.equals("0"))
+                arrived_first_drum = true;
+            if (arrived_first_drum) {
+                try {
+                    wait(50); // 20Hz
+                } catch (Exception e) {
+                }
             }
         }
     }
@@ -82,7 +77,8 @@ public class LoadCSV extends AppCompatActivity {
 
     public void openFileChooser(){
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*");
+        Uri mydir = Uri.parse("/sdcard/proj_dir/");
+        intent.setDataAndType(mydir, "*/*");
         startActivityForResult(intent, requestcode);
     }
 

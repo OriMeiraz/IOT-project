@@ -260,7 +260,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     String row[];
                     File file = new File("/sdcard/proj_dir/");
                     file.mkdir();
-                    String csv = "/sdcard/proj_dir/dolevTheGay.csv"; //+ filename.getText();
+                    String csv = "/sdcard/proj_dir/oriTheGay.csv"; //+ filename.getText();
                     CSVWriter csvWriter = new CSVWriter(new FileWriter(csv, false));
 
                     int n = SoundArray.size();
