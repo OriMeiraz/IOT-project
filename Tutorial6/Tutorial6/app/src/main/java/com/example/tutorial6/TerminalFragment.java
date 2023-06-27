@@ -59,6 +59,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private String deviceAddress;
     private SerialService service;
+    String is_peak;
+    Float peak;
 
     private TextView receiveText;
     private TextView sendText;
@@ -89,15 +91,25 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     EditText NumSteps;
     MediaPlayer player;
     PyObject pyobj;
+    int MAX_VOLUME = 50;
 
-    public void play_drum1(View v){
-        MediaPlayer.create(getContext(), R.raw.drum1).start();
+    public void play_drum1(View v, float vol){
+        MediaPlayer mp =  MediaPlayer.create(getContext(), R.raw.drum1);
+        vol = (float) (1 - (Math.log(MAX_VOLUME - vol) / Math.log(vol)));
+        mp.setVolume(vol, vol);
+        mp.start();
     }
-    public void play_drum2(View v){
-        MediaPlayer.create(getContext(), R.raw.drum2).start();
+    public void play_drum2(View v, float vol){
+        MediaPlayer mp =  MediaPlayer.create(getContext(), R.raw.drum2);
+        vol = (float) (1 - (Math.log(MAX_VOLUME - vol) / Math.log(vol)));
+        mp.setVolume(vol, vol);
+        mp.start();
     }
-    public void play_drum3(View v){
-        MediaPlayer.create(getContext(), R.raw.drum3).start();
+    public void play_drum3(View v, float vol){
+        MediaPlayer mp =  MediaPlayer.create(getContext(), R.raw.drum3);
+        vol = (float) (1 - (Math.log(MAX_VOLUME - vol) / Math.log(vol)));
+        mp.setVolume(vol, vol);
+        mp.start();
     }
 
 
@@ -443,17 +455,19 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     }
 
                     // add received values to line dataset for plotting the linechart
-                    if (z<0){
+                    is_peak = pyobj.callAttr("add_accel", String.valueOf(z)).toString();
+
+                    if (! is_peak.equals("False")){
+                        peak = Float.parseFloat(is_peak);
                         if (h<20)
-                            play_drum3(getView());
+                            play_drum3(getView(), peak);
                         else if (h<40)
-                            play_drum2(getView());
+                            play_drum2(getView(), peak);
                         else if (h<60)
-                            play_drum1(getView());
+                            play_drum1(getView(), peak);
 
                         time = t;
                     }
-
 
                     data.addEntry(new Entry(t, h),0);
                     data.addEntry(new Entry(t, z),1);
