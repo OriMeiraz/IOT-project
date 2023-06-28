@@ -221,6 +221,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         dataSets.add(hDataSet);
         dataSets.add(zDataSet);
         data = new LineData(dataSets);
+        File file = new File("/sdcard/proj_dir/");
+        file.mkdir();
         //mpLineChart.setData(data);
         //mpLineChart.invalidate();
         if (! Python.isStarted()) {
@@ -260,7 +262,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     String row[];
                     File file = new File("/sdcard/proj_dir/");
                     file.mkdir();
-                    String csv = "/sdcard/proj_dir/oriTheGay.csv"; //+ filename.getText();
+                    String csv = "/sdcard/proj_dir/oriTheGay.dtg"; //+ filename.getText();
                     CSVWriter csvWriter = new CSVWriter(new FileWriter(csv, false));
 
                     int n = SoundArray.size();

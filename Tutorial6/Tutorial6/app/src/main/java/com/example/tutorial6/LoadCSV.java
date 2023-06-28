@@ -71,7 +71,7 @@ public class LoadCSV extends AppCompatActivity {
     public void onActivityResult(int requestcode, int resultcode, Intent data) {
         super.onActivityResult(requestcode, resultcode, data);
         Uri uri = data.getData();
-        this.path = uri.getPath();
+        path = uri.getPath();
     }
 
 
@@ -79,6 +79,7 @@ public class LoadCSV extends AppCompatActivity {
     public void openFileChooser(){
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*/*");
+
         startActivityForResult(intent, requestcode);
     }
 
