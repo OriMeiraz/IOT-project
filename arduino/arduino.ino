@@ -102,7 +102,7 @@ void loop() {
   
   output = (String) + " " + timeSend + ", " + event.acceleration.z + ", " + distanceCm;
 
-  Serial.println(output);
+  Serial.println(distanceCm);
   SerialBT.println(output);
   
   delay(50);

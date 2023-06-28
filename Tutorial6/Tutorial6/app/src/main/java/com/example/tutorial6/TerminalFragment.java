@@ -34,6 +34,9 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
+import com.chaquo.python.PyObject;
+import com.chaquo.python.Python;
+import com.chaquo.python.android.AndroidPlatform;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
@@ -43,7 +46,6 @@ import com.opencsv.CSVWriter;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 //import java.time.LocalTime;
 import java.time.LocalDateTime;
@@ -57,9 +59,12 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private String deviceAddress;
     private SerialService service;
+    String is_peak;
+    Float peak;
+    Integer sound;
 
     private TextView receiveText;
-    private TextView sendText;
+    //private TextView sendText;
     private TextUtil.HexWatcher hexWatcher;
 
     private Connected connected = Connected.False;
@@ -68,35 +73,48 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private boolean pendingNewline = false;
     private String newline = TextUtil.newline_crlf;
 
-    LineChart mpLineChart;
+    //LineChart mpLineChart;
     LineDataSet hDataSet;
     LineDataSet zDataSet;
     float time = 0;
     ArrayList<ILineDataSet> dataSets = new ArrayList<>();
     LineData data;
-    Button buttonClear;
     Button buttonCsvShow;
     Button buttonSave;
     Button buttonStartStop;
     Button buttonReset;
+    EditText name;
     CheckBox isRunning;
     ArrayList<String> hArray = new ArrayList<>();
     ArrayList<String> zArray = new ArrayList<>();
     ArrayList<String> TimeArray = new ArrayList<>();
-    EditText filename;
-    EditText NumSteps;
+    ArrayList<Integer> SoundArray = new ArrayList<>();
     MediaPlayer player;
+    PyObject pyobj;
+    int MAX_VOLUME = 50;
 
-    public void play(View v){
-        MediaPlayer.create(getContext(), R.raw.drum).start();
+    File record;
+
+    public void play_drum1(View v, float vol){
+        MediaPlayer mp =  MediaPlayer.create(getContext(), R.raw.drum1);
+        vol = (float) (1 - (Math.log(MAX_VOLUME - vol) / Math.log(vol)));
+        mp.setVolume(vol, vol);
+        mp.start();
     }
-//    public void stop(View v){
-//        if (player != null){
-//            player.release();
-//            player = null;
-//            Toast.makeText(service, "Done Playing", Toast.LENGTH_SHORT).show();
-//        }
-//    }
+    public void play_drum2(View v, float vol){
+        MediaPlayer mp =  MediaPlayer.create(getContext(), R.raw.drum2);
+        vol = (float) (1 - (Math.log(MAX_VOLUME - vol) / Math.log(vol)));
+        mp.setVolume(vol, vol);
+        mp.start();
+    }
+    public void play_drum3(View v, float vol){
+        MediaPlayer mp =  MediaPlayer.create(getContext(), R.raw.drum3);
+        vol = (float) (1 - (Math.log(MAX_VOLUME - vol) / Math.log(vol)));
+        mp.setVolume(vol, vol);
+        mp.start();
+    }
+
+
     /*
      * Lifecycle
      */
@@ -180,26 +198,18 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         receiveText.setTextColor(getResources().getColor(R.color.colorRecieveText)); // set as default color to reduce number of spans
         receiveText.setMovementMethod(ScrollingMovementMethod.getInstance());
 
-        sendText = view.findViewById(R.id.send_text);
-        hexWatcher = new TextUtil.HexWatcher(sendText);
-        hexWatcher.enable(hexEnabled);
-        sendText.addTextChangedListener(hexWatcher);
-        sendText.setHint(hexEnabled ? "HEX mode" : "");
-        isRunning = view.findViewById(R.id.is_running);
+        //hexWatcher = new TextUtil.HexWatcher(sendText);
+        //hexWatcher.enable(hexEnabled);
+        //sendText.addTextChangedListener(hexWatcher);
+        //sendText.setHint(hexEnabled ? "HEX mode" : "");
 
-        filename = view.findViewById(R.id.file_name);
-        NumSteps = view.findViewById(R.id.num_steps);
-
-        View sendBtn = view.findViewById(R.id.send_btn);
-        sendBtn.setOnClickListener(v -> send(sendText.getText().toString()));
-
-        buttonClear = (Button) view.findViewById(R.id.button1);
         buttonCsvShow = (Button) view.findViewById(R.id.button2);
         buttonSave = (Button) view.findViewById(R.id.save_button);
         buttonStartStop = (Button) view.findViewById(R.id.start_stop);
         buttonReset = (Button) view.findViewById(R.id.reset_btn);
+        name = (EditText) view.findViewById(R.id.rec_name);
 
-        mpLineChart = (LineChart) view.findViewById(R.id.line_chart);
+        //mpLineChart = (LineChart) view.findViewById(R.id.line_chart);
 
         hDataSet =  new LineDataSet(emptyDataValues(), "height");
         hDataSet.setColor(ColorTemplate.rgb("00ff00"));
@@ -213,25 +223,19 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         dataSets.add(hDataSet);
         dataSets.add(zDataSet);
         data = new LineData(dataSets);
-        mpLineChart.setData(data);
-        mpLineChart.invalidate();
+        File file = new File("/sdcard/Documents/proj_dir/");
+        file.mkdir();
+        //mpLineChart.setData(data);
+        //mpLineChart.invalidate();
+        if (! Python.isStarted()) {
+            Python.start(new AndroidPlatform(getActivity()));
+        }
 
+        Python py =  Python.getInstance();
+        pyobj = py.getModule("test");
 
+        record = new File("record.txt");
 
-        buttonClear.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Toast.makeText(getContext(),"Clear",Toast.LENGTH_SHORT).show();
-                LineData data = mpLineChart.getData();
-                ILineDataSet set;
-                for (int i=0; i<3; i++) {
-                    set = data.getDataSetByIndex(i);
-                    //data.getDataSetByIndex(i);
-                    while (set.removeLast()) {
-                    }
-                }
-
-            }
-        });
 
         buttonCsvShow.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -243,11 +247,11 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         buttonReset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //play(v);
-                MediaPlayer.create(getContext(), R.raw.drum).start();
                 TimeArray = new ArrayList<>();
                 hArray = new ArrayList<>();
                 zArray = new ArrayList<>();
+                SoundArray = new ArrayList<>();
+                Toast.makeText(service, "Recording has been reset", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -255,36 +259,29 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View v) {
+                if (name.getText().toString().equals("")){
+                    Toast.makeText(service, "Must specify name", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 try {
                     String row[];
-                    File file = new File("/sdcard/csv_dir/");
+                    File file = new File("/sdcard/Documents/proj_dir/");
                     file.mkdir();
-                    String csv = "/sdcard/csv_dir/" + filename.getText();
-                    CSVWriter csvWriter = new CSVWriter(new FileWriter(csv, false));
-                    csvWriter.writeNext(new String[]{"Name:", filename.getText().toString()});
-                    LocalDateTime datetime = LocalDateTime.now();
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-                    csvWriter.writeNext(new String[]{"EXPERIMENT TIME:", datetime.format(formatter)});
-                    String activity = "Walking";
-                    if (isRunning.isChecked()){
-                        activity = "Running";
-                    }
-                    csvWriter.writeNext(new String[]{"ACTIVITY TYPE:", activity});
-                    csvWriter.writeNext(new String[]{"COUNT OF ACTUAL STEPS:", NumSteps.getText().toString()});
-                    csvWriter.writeNext(new String[]{});
-                    csvWriter.writeNext(new String[]{"Time [sec]", "ACC X", "ACC Y", "ACC Z"});
 
-                    float t0 = Float.parseFloat(TimeArray.get(0));
-                    int n = zArray.size();
+                    String csv = "/sdcard/Documents/proj_dir/" + name.getText().toString() + ".dtg";
+                    CSVWriter csvWriter = new CSVWriter(new FileWriter(csv, false));
+
+                    int n = SoundArray.size();
                     for (int i = 0; i < n; i++) {
-                        float t = Float.parseFloat(TimeArray.get(i));
-                        row = new String[]{String.valueOf(t-t0), TimeArray.get(i), zArray.get(i), hArray.get(i)};
+                        row = new String[]{String.valueOf(SoundArray.get(i))};
                         csvWriter.writeNext(row);
                     }
                     csvWriter.close();
                     hArray = new ArrayList<>();
                     zArray = new ArrayList<>();
                     TimeArray = new ArrayList<>();
+                    SoundArray = new ArrayList<>();
                     Toast.makeText(getActivity(), "Saved", Toast.LENGTH_LONG).show();
 
                 }
@@ -299,11 +296,11 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             public void onClick(View v) {
                 if (buttonStartStop.getText().equals("START")){
                     buttonStartStop.setText("STOP");
-                    buttonStartStop.setBackgroundColor(Color.RED);
+                    buttonStartStop.setTextColor(Color.RED);
                 }
                 else {
                     buttonStartStop.setText("START");
-                    buttonStartStop.setBackgroundColor(Color.BLUE);
+                    buttonStartStop.setTextColor(Color.GREEN);
                 }
             }
         });
@@ -317,35 +314,35 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         menu.findItem(R.id.hex).setChecked(hexEnabled);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.clear) {
-            receiveText.setText("");
-            return true;
-        } else if (id == R.id.newline) {
-            String[] newlineNames = getResources().getStringArray(R.array.newline_names);
-            String[] newlineValues = getResources().getStringArray(R.array.newline_values);
-            int pos = java.util.Arrays.asList(newlineValues).indexOf(newline);
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setTitle("Newline");
-            builder.setSingleChoiceItems(newlineNames, pos, (dialog, item1) -> {
-                newline = newlineValues[item1];
-                dialog.dismiss();
-            });
-            builder.create().show();
-            return true;
-        } else if (id == R.id.hex) {
-            hexEnabled = !hexEnabled;
-            sendText.setText("");
-            hexWatcher.enable(hexEnabled);
-            sendText.setHint(hexEnabled ? "HEX mode" : "");
-            item.setChecked(hexEnabled);
-            return true;
-        } else {
-            return super.onOptionsItemSelected(item);
-        }
-    }
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        int id = item.getItemId();
+//        if (id == R.id.clear) {
+//            receiveText.setText("");
+//            return true;
+//        } else if (id == R.id.newline) {
+//            String[] newlineNames = getResources().getStringArray(R.array.newline_names);
+//            String[] newlineValues = getResources().getStringArray(R.array.newline_values);
+//            int pos = java.util.Arrays.asList(newlineValues).indexOf(newline);
+//            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+//            builder.setTitle("Newline");
+//            builder.setSingleChoiceItems(newlineNames, pos, (dialog, item1) -> {
+//                newline = newlineValues[item1];
+//                dialog.dismiss();
+//            });
+//            builder.create().show();
+//            return true;
+//        } else if (id == R.id.hex) {
+//            hexEnabled = !hexEnabled;
+//            sendText.setText("");
+//            hexWatcher.enable(hexEnabled);
+//            sendText.setHint(hexEnabled ? "HEX mode" : "");
+//            item.setChecked(hexEnabled);
+//            return true;
+//        } else {
+//            return super.onOptionsItemSelected(item);
+//        }
+//    }
 
     /*
      * Serial + UI
@@ -426,19 +423,35 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     // function to trim blank spaces
 
                     // saving data to csv
+
+
+                    // add received values to line dataset for plotting the linechart
+                    is_peak = pyobj.callAttr("add_accel", String.valueOf(z)).toString();
+                    sound = 0;
+                    if (! is_peak.equals("False")){
+                        peak = Float.parseFloat(is_peak);
+                        if (h<20) {
+                            play_drum3(getView(), peak);
+                            sound = 3;
+                        }
+                        else if (h<40) {
+                            play_drum2(getView(), peak);
+                            sound = 2;
+                        }
+                        else if (h<60) {
+                            play_drum1(getView(), peak);
+                            sound = 1;
+                        }
+
+                        time = t;
+                    }
                     if (buttonStartStop.getText().equals("STOP"))
                     {
                         TimeArray.add(String.valueOf(t));
                         zArray.add(String.valueOf(z));
                         hArray.add(String.valueOf(h));
+                        SoundArray.add(sound);
                     }
-
-                    // add received values to line dataset for plotting the linechart
-                    if (z<-2){
-                        play(getView());
-                        time = t;
-                    }
-
                     data.addEntry(new Entry(t, h),0);
                     data.addEntry(new Entry(t, z),1);
                     //data.addEntry(new Entry(Float.parseFloat(parts[3]),Float.parseFloat(parts[1])),1);
@@ -447,8 +460,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                     zDataSet.notifyDataSetChanged(); // let the data know a dataSet chang
                     hDataSet.notifyDataSetChanged(); // let the data know a dataSet changed
                     //zDataSet.notifyDataSetChanged(); // let the data know a dataSet changed
-                    mpLineChart.notifyDataSetChanged(); // let the chart know it's data changed
-                    mpLineChart.invalidate(); // refresh
+                    //mpLineChart.notifyDataSetChanged(); // let the chart know it's data changed
+                    //mpLineChart.invalidate(); // refresh
 
             }
 

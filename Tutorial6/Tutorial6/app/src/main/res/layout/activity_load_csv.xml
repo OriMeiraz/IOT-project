@@ -1,36 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical"
-    android:gravity="center_horizontal">
-
-
-    <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/line_chart"
-        android:layout_width="match_parent"
-        android:layout_height="320dp"
-        android:background="@color/white" />
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".LoadCSV">
 
     <Button
-        android:id="@+id/button_back"
+        android:id="@+id/choose_file"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="back" />
-
-    <EditText
-        android:id="@+id/load_csv_file"
-        android:layout_width="411dp"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="file name"
-        android:inputType="textPersonName" />
+        android:layout_marginTop="100dp"
+        android:text="Choose"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView2" />
 
     <Button
-        android:id="@+id/load_csv_btn"
-        android:layout_width="match_parent"
+        android:id="@+id/play"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Show" />
+        android:text="Play"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.499"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/choose_file"
+        app:layout_constraintVertical_bias="0.864" />
 
+    <TextView
+        android:id="@+id/chosen_rec"
+        android:layout_width="199dp"
+        android:layout_height="72dp"
+        android:layout_marginStart="112dp"
+        android:layout_marginBottom="80dp"
+        android:text="You didn't choose anything!"
+        app:layout_constraintBottom_toTopOf="@+id/play"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/choose_file"
+        app:layout_constraintVertical_bias="0.814" />
 
-</LinearLayout>
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="374dp"
+        android:layout_height="286dp"
+        android:layout_marginTop="32dp"
+        android:src="@drawable/badamtss"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_editor_absoluteX="16dp" />
+</androidx.constraintlayout.widget.ConstraintLayout>

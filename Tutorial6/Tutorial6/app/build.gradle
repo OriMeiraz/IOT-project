@@ -1,18 +1,40 @@
 plugins {
     id 'com.android.application'
+    id 'com.chaquo.python'
+
 }
 
 android {
     compileSdkVersion 31
+    buildToolsVersion "30.0.3"
+
 
     defaultConfig {
         applicationId "com.example.tutorial6"
-        minSdkVersion 18
+        minSdkVersion 21
         targetSdkVersion 31
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+        }
+
+        python {
+            buildPython "C:/Users/orime/AppData/Local/Programs/Python/Python310/python.exe"
+            pip {
+                // A requirement specifier, with or without a version number:
+                install "scipy"
+            }
+
+        }
+
+        sourceSets {
+            main {
+                python.srcDir "src/main/python"
+            }
+        }
     }
 
     buildTypes {
