@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
 
@@ -77,8 +78,7 @@ public class LoadCSV extends AppCompatActivity {
 
     public void openFileChooser(){
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        Uri mydir = Uri.parse("/sdcard/proj_dir/");
-        intent.setDataAndType(mydir, "*/*");
+        intent.setType("*/*");
         startActivityForResult(intent, requestcode);
     }
 
