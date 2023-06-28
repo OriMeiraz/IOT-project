@@ -223,7 +223,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         dataSets.add(hDataSet);
         dataSets.add(zDataSet);
         data = new LineData(dataSets);
-        File file = new File("/sdcard/proj_dir/");
+        File file = new File("/sdcard/Documents/proj_dir/");
         file.mkdir();
         //mpLineChart.setData(data);
         //mpLineChart.invalidate();
@@ -265,9 +265,10 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
                 try {
                     String row[];
-                    File file = new File("/sdcard/proj_dir/");
+                    File file = new File("/sdcard/Documents/proj_dir/");
                     file.mkdir();
-                    String csv = "/sdcard/proj_dir/" + name.getText().toString() + ".dtg";
+
+                    String csv = "/sdcard/Documents/proj_dir/" + name.getText().toString() + ".dtg";
                     CSVWriter csvWriter = new CSVWriter(new FileWriter(csv, false));
 
                     int n = SoundArray.size();

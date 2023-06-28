@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
 
@@ -14,11 +13,14 @@ import com.opencsv.CSVReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
-import android.os.Handler;
+
+import android.widget.TextView;
+import android.widget.Toast;
 
 public class LoadCSV extends AppCompatActivity {
     int requestcode = 1;
     String path;
+    TextView tv;
 
 
     @Override
@@ -28,6 +30,7 @@ public class LoadCSV extends AppCompatActivity {
 
         Button choose = (Button) findViewById(R.id.choose_file);
         Button Play = (Button) findViewById(R.id.play);
+        tv = (TextView) findViewById(R.id.chosen_rec);
         choose.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -39,7 +42,11 @@ public class LoadCSV extends AppCompatActivity {
         Play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String name = "/sdcard/"+path.split("/")[2] + "/" +path.split("/")[3];
+                if (tv.getText().toString().equals("You didn't choose anything!")){
+                    Toast.makeText(LoadCSV.this, "Must choose file first", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String name = "sdcard/"+path.split(":")[1];
                 ArrayList<String[]> csvData = CsvRead(name);
                 playFile(csvData);
             }
@@ -72,6 +79,15 @@ public class LoadCSV extends AppCompatActivity {
         super.onActivityResult(requestcode, resultcode, data);
         Uri uri = data.getData();
         path = uri.getPath();
+        String name = path.split("/")[path.split("/").length-1];
+        if (name.endsWith(".dtg")){
+            int len_name = name.length();
+            name = name.substring(0, len_name-3);
+            tv.setText("You chose " + name);
+        }
+        else{
+            Toast.makeText(this, "Can only read .dtg files", Toast.LENGTH_SHORT).show();
+        }
     }
 
 
