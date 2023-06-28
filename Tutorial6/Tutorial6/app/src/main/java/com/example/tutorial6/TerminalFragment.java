@@ -251,6 +251,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 hArray = new ArrayList<>();
                 zArray = new ArrayList<>();
                 SoundArray = new ArrayList<>();
+                Toast.makeText(service, "Recording has been reset", Toast.LENGTH_SHORT).show();
             }
         });
 
