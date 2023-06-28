@@ -83,6 +83,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     Button buttonSave;
     Button buttonStartStop;
     Button buttonReset;
+    EditText name;
     CheckBox isRunning;
     ArrayList<String> hArray = new ArrayList<>();
     ArrayList<String> zArray = new ArrayList<>();
@@ -206,6 +207,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         buttonSave = (Button) view.findViewById(R.id.save_button);
         buttonStartStop = (Button) view.findViewById(R.id.start_stop);
         buttonReset = (Button) view.findViewById(R.id.reset_btn);
+        name = (EditText) view.findViewById(R.id.rec_name);
 
         //mpLineChart = (LineChart) view.findViewById(R.id.line_chart);
 
@@ -256,11 +258,16 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View v) {
+                if (name.getText().toString().equals("")){
+                    Toast.makeText(service, "Must specify name", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 try {
                     String row[];
                     File file = new File("/sdcard/proj_dir/");
                     file.mkdir();
-                    String csv = "/sdcard/proj_dir/oriTheGay.dtg"; //+ filename.getText();
+                    String csv = "/sdcard/proj_dir/" + name.getText().toString() + ".dtg";
                     CSVWriter csvWriter = new CSVWriter(new FileWriter(csv, false));
 
                     int n = SoundArray.size();
@@ -287,11 +294,11 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             public void onClick(View v) {
                 if (buttonStartStop.getText().equals("START")){
                     buttonStartStop.setText("STOP");
-                    buttonStartStop.setBackgroundColor(Color.RED);
+                    buttonStartStop.setTextColor(Color.RED);
                 }
                 else {
                     buttonStartStop.setText("START");
-                    buttonStartStop.setBackgroundColor(Color.BLUE);
+                    buttonStartStop.setTextColor(Color.GREEN);
                 }
             }
         });
